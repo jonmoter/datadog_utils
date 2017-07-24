@@ -1,17 +1,20 @@
 require 'bundler/setup'
 require 'digest'
 require 'json'
-# require 'byebug'
 require 'pry'
 
 $LOAD_PATH << File.expand_path('../lib', __FILE__)
 
-require 'datadog_sync'
+require 'common'
 
 namespace :metrics do
   desc "Download metrics to temp dir"
-  task :download do |t|
-    ruby "bin/metrics/download_metrics.rb"
+  task :download do |_t|
+    data = DatadogClient.get('metrics', from: (Time.now - 60*60*24).to_i)
+    outfile = Utils.save_file('metrics', data)
+
+    json = JSON.parse(data)
+    puts "Got #{json['metrics'].count} metrics. Output JSON data to #{outfile}"
   end
 
   desc "Count up information about metrics"
@@ -22,8 +25,12 @@ end
 
 namespace :tags do
   desc "Download tag data to temp files"
-  task :download do |t|
-    ruby "bin/metrics/download_tags.rb"
+  task :download do |_t|
+    data = DatadogClient.get('tags/hosts')
+    outfile = Utils.save_file('tags_by_host', data)
+
+    json = JSON.parse(data)
+    puts "Got #{json['tags'].count} unique tags. Output JSON data to #{outfile}"
   end
 
   desc "Count up the number of tags used"

@@ -16,8 +16,6 @@ class DatadogException < StandardError
 end
 
 class DatadogSync
-  include DatadogClient
-  ROOT_DIR = File.expand_path('../..', __FILE__).freeze
 
   MONITORS_DIR = File.expand_path('monitors/generated', ROOT_DIR).freeze
   SCREENBOARD_DIR = File.expand_path('screenboards/generated', ROOT_DIR).freeze
@@ -81,15 +79,9 @@ class DatadogSync
 
   private
 
-  def save_file(name, data, directory, format = "json")
-    name = name.downcase.gsub(/\W+/, '_')
-    FileUtils.mkdir_p(directory)
-
-    filepath = ::Pathname.new("#{directory}/#{name}.#{format}")
-    File.write(filepath, data)
-
-    puts "Saved #{filepath}"
-
-    filepath
+  def datadog_client
+    DatadogClient.client
   end
+
+
 end

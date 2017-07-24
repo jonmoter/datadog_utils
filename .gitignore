@@ -3,6 +3,6 @@
 .env
 .idea
 **/*.swp
-bin/metrics/*.json
 tmp
 vendor
+data
