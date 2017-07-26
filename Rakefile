@@ -6,18 +6,19 @@ require 'pry'
 $LOAD_PATH << File.expand_path('../lib', __FILE__)
 
 require 'common'
+require 'datadog_sync'
 
 namespace :metrics do
   desc "Download metrics to data subdirectory"
   task :download do |_t|
     data = DatadogClient.get('metrics', from: (Time.now - 60*60*24).to_i)
-    outfile = Utils.save_file('metrics', data)
-
     json = JSON.parse(data)
+
+    outfile = Utils.save_file('metrics', JSON.pretty_generate(json))
     puts "Got #{json['metrics'].count} metrics. Output JSON data to #{outfile}"
   end
 
-  desc "Count up information about metrics"
+  desc "Count up information about metrics [MATCH, LIMIT, MIN_SIZE]"
   task :count do |_t|
     infile = Utils.filepath('metrics')
     metrics = JSON.parse(File.read(infile))['metrics']
@@ -35,6 +36,9 @@ namespace :metrics do
 
     i = 0
     counts.to_a.sort_by(&:last).reverse.each do |metric, value|
+      break if ENV['MIN_SIZE'] && value < ENV['MIN_SIZE'].to_i
+      next if ENV['MATCH'] && !metric.include?(ENV['MATCH'])
+
       puts "#{value}\t#{metric}"
       i += 1
       break if ENV['LIMIT'] && i >= ENV['LIMIT'].to_i
@@ -79,6 +83,12 @@ end
     desc "Download #{resource} from datadog (by id)"
     task :get, :id do |_t, args|
       ruby "bin/get_#{resource}.rb #{args.id}"
+    end
+
+    desc "Download all #{resource}s from datadog."
+    task :get_all do |_t|
+      puts "Getting all #{resource} definitions from datadog..."
+      DatadogSync.new.send("save_all_#{resource}s")
     end
 
     desc "Download #{resource} from datadog (by filename)"

@@ -7,16 +7,22 @@ class Utils
     def filepath(name, subdir: '', format: 'json')
       directory = File.expand_path(subdir, DATA_DIR)
 
-      name = name.downcase.gsub(/\W+/, '_')
+      name = name.to_s.downcase.gsub(/\W+/, '_')
       ::Pathname.new("#{directory}/#{name}.#{format}")
     end
 
-    def save_file(name, data, subdir: '', format: "json")
+    def relative_path(filepath)
+      filepath = ::Pathname.new(filepath) unless filepath.is_a? ::Pathname
+
+      filepath.relative_path_from(Pathname.new(ENV['PWD']))
+    end
+
+    def save_file(name, data, subdir: '', format: 'json', output: true)
       file = filepath(name, subdir: subdir, format: format)
       FileUtils.mkdir_p(File.dirname(file))
 
       File.write(file, data)
-      puts "Saved #{file}"
+      puts "Saved #{relative_path(file)}" if output
 
       file
     end
