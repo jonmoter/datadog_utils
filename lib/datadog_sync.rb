@@ -72,7 +72,7 @@ class DatadogSync
     raise DatadogException.new(code, result) if code.to_i != 200
 
     Utils.save_file('all_screenboards', JSON.pretty_generate(result))
-    download_all_boards(result['screenboards'], 'screenboard')
+    download_all_objects(result['screenboards'], 'screenboard')
   end
 
   #
@@ -95,7 +95,7 @@ class DatadogSync
     raise DatadogException.new(code, result) if code.to_i != 200
 
     Utils.save_file('all_timeboards', JSON.pretty_generate(result))
-    download_all_boards(result['dashes'], 'timeboard')
+    download_all_objects(result['dashes'], 'timeboard')
   end
 
   private
@@ -127,14 +127,5 @@ class DatadogSync
     end
     puts ''
     puts "Saved #{count} #{type}s to data/#{subdir} subdirectory"
-  rescue => e
-    puts ''
-    # When downloading hundreds of boards, we sometimes get a "Datadog is down" HTML response back
-    if e.message.start_with?('Invalid JSON Response:')
-      file = Utils.save_file('exception', e.message, format: 'txt')
-      puts "Invalid JSON response from datadog. Saved output to #{file}"
-    else
-      raise e
-    end
   end
 end
