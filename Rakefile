@@ -82,7 +82,7 @@ end
   namespace resource do
     desc "Download #{resource} from datadog (by id)"
     task :get, :id do |_t, args|
-      ruby "bin/get_#{resource}.rb #{args.id}"
+      DatadogSync.new.send("save_#{resource}_to_file", args.id, name: args.id)
     end
 
     desc "Download all #{resource}s from datadog."
@@ -95,7 +95,7 @@ end
     task :refresh, :name do |_t, args|
       begin
         id = JSON.parse(File.read("#{resource}s/generated/#{args.name}.json"))["id"]
-        ruby "bin/get_#{resource}.rb #{id}"
+        DatadogSync.new.send("save_#{resource}_to_file", id, name: id.to_s)
       rescue SystemCallError
         fail "Unable to locate a saved dashboard with that name"
       end
